@@ -8,6 +8,5 @@ mkDerivation {
   libraryHaskellDepends = [
     base lens mtl transformers unix xmonad xmonad-contrib
   ];
-  doHaddock = false;
   license = stdenv.lib.licenses.bsd3;
 }

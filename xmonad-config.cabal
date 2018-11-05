@@ -16,8 +16,8 @@ extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 library
-  -- exposed-modules:
-  -- other-modules:
+  exposed-modules:  ToggleLayout
+  ghc-options:         -Wall
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
                      , xmonad
