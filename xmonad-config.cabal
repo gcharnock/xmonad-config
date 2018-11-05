@@ -24,5 +24,7 @@ library
                      , xmonad-contrib
                      , unix
                      , lens
+                     , transformers
+                     , mtl
   hs-source-dirs:      src
   default-language:    Haskell2010

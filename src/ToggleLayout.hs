@@ -13,6 +13,10 @@ import           XMonad                         ( Message
                                                 , handleMessage
                                                 , fromMessage
                                                 , Full(Full)
+                                                , WorkspaceId
+                                                , Rectangle
+                                                , X
+                                                , SomeMessage
                                                 )
 import           XMonad.StackSet                ( Workspace(Workspace) )
 import           Control.Lens                   ( Lens
@@ -24,10 +28,16 @@ import           Control.Lens                   ( Lens
                                                 , (&)
                                                 , _2
                                                 )
+import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Class
 
 data MsgToggleFS = MsgToggleFS
 
 instance Message MsgToggleFS
+
+data MsgToggleGaps = MsgToggleGaps
+
+instance Message MsgToggleGaps
 
 data FSState = FullScreen | NotFullScreen
   deriving (Show, Read)
@@ -61,30 +71,50 @@ lGapsState = lens gapsState (\t n -> t { gapsState = n })
 linnerLayout :: Lens' (ToggleLayout l a) (l a)
 linnerLayout = lens innerLayout (\t n -> t { innerLayout = n })
 
-instance forall l a. (Show a, LayoutClass l a) => LayoutClass (ToggleLayout l) a where
-    runLayout ws rect = do
-            let layout = ws ^. lWSLayout
-            case layout ^. lFSState of
-                 FullScreen -> do
-                   (windows, _) <- runLayout (ws & lWSLayout .~ Full) rect
-                   return $ (windows, Nothing)
-                 NotFullScreen -> do
-                   result <- runLayout (ws & lWSLayout .~ layout ^. linnerLayout) rect
-                   return $ result & _2 %~ fmap ((\l -> layout & linnerLayout .~ l) :: l a -> ToggleLayout l a)
+runLayoutTL
+    :: forall l a
+     . LayoutClass l a
+    => Workspace WorkspaceId (ToggleLayout l a) a
+    -> Rectangle
+    -> X ([(a, Rectangle)], Maybe (ToggleLayout l a))
+runLayoutTL ws rect = do
+    let layout = ws ^. lWSLayout
+    case layout ^. lFSState of
+        FullScreen -> do
+            (windows, _) <- runLayout (ws & lWSLayout .~ Full) rect
+            return $ (windows, Nothing)
+        NotFullScreen -> do
+            result <- runLayout (ws & lWSLayout .~ layout ^. linnerLayout) rect
+            return
+                $  result
+                &  _2
+                %~ fmap
+                       ((\l -> layout & linnerLayout .~ l) :: l a
+                         -> ToggleLayout l a
+                       )
 
-    handleMessage (ToggleLayout fsState gapsState l) msg = do
+
+handleMessageTL :: LayoutClass l a=> ToggleLayout l a -> SomeMessage -> X (Maybe (ToggleLayout l a))
+handleMessageTL (ToggleLayout fsState gapsState l) msg = do
+    handled <- runMaybeT $ do
         let layout' = lFSState %~ toggleFS
-        let maybeSwap = fromMessage msg
-        case maybeSwap of
-            Nothing -> do
-                maybeLayout <- handleMessage l msg
-                return $ fmap (\l -> ToggleLayout fsState gapsState l) maybeLayout
-            Just MsgToggleFS ->
-                case fsState of
-                    FullScreen ->
-                        return $ Just $ ToggleLayout NotFullScreen gapsState l
-                    NotFullScreen ->
-                        return $ Just $ ToggleLayout FullScreen gapsState l
+        MsgToggleFS <- fromMessage msg
+        case fsState of
+            FullScreen ->
+                return $ Just $ ToggleLayout NotFullScreen gapsState l
+            NotFullScreen ->
+                return $ Just $ ToggleLayout FullScreen gapsState l
+    case handled of
+        Nothing -> do
+            maybeLayout <- handleMessage l msg
+            return $ fmap (\l -> ToggleLayout fsState gapsState l) maybeLayout
+        Just out -> return out
 
+
+
+instance (Show a, LayoutClass l a) => LayoutClass (ToggleLayout l) a where
+    runLayout = runLayoutTL
+    handleMessage = handleMessageTL
+    
 addToggles :: l a -> ToggleLayout l a
 addToggles = ToggleLayout NotFullScreen Gaps
