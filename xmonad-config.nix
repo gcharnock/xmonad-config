@@ -1,12 +1,15 @@
-{ mkDerivation, base, lens, mtl, stdenv, transformers, unix, xmonad
-, xmonad-contrib
+{ mkDerivation, base, containers, lens, mtl, process, stdenv
+, transformers, unix, xmonad, xmonad-contrib
 }:
 mkDerivation {
-  pname = "xmonad-config";
+  pname = "my-xmonad";
   version = "0.1.0.0";
   src = ./.;
-  libraryHaskellDepends = [
-    base lens mtl transformers unix xmonad xmonad-contrib
+  isLibrary = false;
+  isExecutable = true;
+  executableHaskellDepends = [
+    base containers lens mtl process transformers unix xmonad
+    xmonad-contrib
   ];
   license = stdenv.lib.licenses.bsd3;
 }

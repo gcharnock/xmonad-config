@@ -1,0 +1,1 @@
+/home/gareth/.config/nixpkgs/xmonad.hs
