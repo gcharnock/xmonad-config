@@ -1,18 +1,15 @@
-
+cabal-version:       2.4
 name:                xmonad-config
 version:             0.1.0.0
-license:             BSD3
 license-file:        LICENSE
 author:              Gareth Charnock
 maintainer:          gareth.tpc@gmail.com
 build-type:          Simple
-extra-source-files:  ChangeLog.md
-cabal-version:       >=1.10
 
 executable xmonad-config
   ghc-options:         -Wall -Wno-missing-signatures
   -- other-extensions:
-  build-depends:       base >=4.11 && <4.12
+  build-depends:       base >=4.11 && <4.13
                      , xmonad
                      , xmonad-contrib
                      , unix
@@ -21,6 +18,6 @@ executable xmonad-config
                      , mtl
                      , containers
                      , process
-  hs-source-dirs:      .
-  main-is:  xmonad.hs
+  hs-source-dirs:      lib
+  main-is:  ../xmonad.hs
   default-language:    Haskell2010

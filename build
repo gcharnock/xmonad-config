@@ -1,0 +1,6 @@
+set -e 
+
+stack build :xmonad-config --verbosity error
+stack install :xmonad-config --local-bin-path bin/ --verbosity error
+mv bin/xmonad-config "$1"
+

@@ -29,6 +29,9 @@ import           Control.Lens                   ( Lens
                                                 , _2
                                                 , _Just
                                                 )
+import qualified XMonad.Layout.Spacing as Spacing
+
+--- Message Types
 
 data MsgToggleFS = MsgToggleFS
 
@@ -38,12 +41,16 @@ data MsgToggleGaps = MsgToggleGaps
 
 instance Message MsgToggleGaps
 
+--- FS state type
+
 data FSState = FullScreen | NotFullScreen
   deriving (Show, Read)
 
 toggleFS :: FSState -> FSState
 toggleFS FullScreen    = NotFullScreen
 toggleFS NotFullScreen = FullScreen
+
+--- Gaps state type
 
 data GapsState = Gaps | NoGaps
   deriving (Show, Read)
@@ -82,12 +89,17 @@ runLayoutTL
     -> X ([(a, Rectangle)], Maybe (ToggleLayout l a))
 runLayoutTL ws rect = do
     let layout = ws ^. lWSLayout
+    let gapWidth = 
+            case layout ^. lGapsState of
+                Gaps -> 6
+                NoGaps -> 0
     case layout ^. lFSState of
         FullScreen -> do
             result <- runLayout (ws & lWSLayout .~ Full) rect
             return $ result & _2 . _Just .~ layout
         NotFullScreen -> do
-            result <- runLayout (ws & lWSLayout .~ layout ^. lInnerLayout) rect
+            let innerLayout = (ws & lWSLayout .~ layout ^. lInnerLayout)
+            result <- runLayout innerLayout rect
             return $ result & _2 . _Just %~ \newLayout -> layout & lInnerLayout .~ newLayout
 
 handleMessageTL
@@ -108,4 +120,4 @@ instance (Show a, LayoutClass l a) => LayoutClass (ToggleLayout l) a where
     handleMessage = handleMessageTL
 
 addToggles :: l a -> ToggleLayout l a
-addToggles = ToggleLayout NotFullScreen Gaps
+addToggles = ToggleLayout NotFullScreen NoGaps 

@@ -2,7 +2,7 @@
 , transformers, unix, xmonad, xmonad-contrib
 }:
 mkDerivation {
-  pname = "my-xmonad";
+  pname = "xmonad-config";
   version = "0.1.0.0";
   src = ./.;
   isLibrary = false;
