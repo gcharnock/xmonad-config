@@ -26,6 +26,7 @@ import qualified XMonad.StackSet as W
 import XMonad.Layout.Tabbed
 
 import qualified XMonad.Layout.ToggleLayout as My
+import qualified XMonad.Layout.TabbedWithTray as My
 
 import XMonad.Actions.TreeSelect
 
@@ -134,14 +135,9 @@ myWorkspaces = [ Node "Browser" []
                    , Node "hoogle" []
                    ]
                ]
--- togglevga = do
---   screencount <- LIS.countScreens
---   if screencount > 1
---    then spawn "xrandr --output VGA-2 --off"
---    else spawn "xrandr --output VGA-1 --auto --left-of VGA-2"
 
 myLayout = My.addToggles $ avoidStruts 
-  (emptyBSP ||| simpleTabbed ||| tiled ||| Mirror tiled)
+  (emptyBSP ||| simpleTabbed {-||| My.tabbedWithTray-} ||| tiled ||| Mirror tiled)
   where
     -- default tiling algorithm partitions the screen into two panes
     tiled   = Tall nmaster delta ratio

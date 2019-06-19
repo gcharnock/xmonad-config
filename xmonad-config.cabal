@@ -8,7 +8,10 @@ build-type:          Simple
 
 executable xmonad-config
   ghc-options:         -Wall -Wno-missing-signatures
-  -- other-extensions:
+  other-modules:     XMonad.Layout.TabbedWithTray
+                     XMonad.Layout.ToggleLayout
+                     XMonad.Lens
+  extensions:          NamedFieldPuns
   build-depends:       base >=4.11 && <4.13
                      , xmonad
                      , xmonad-contrib

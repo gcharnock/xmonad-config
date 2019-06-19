@@ -29,7 +29,7 @@ import           Control.Lens                   ( Lens
                                                 , _2
                                                 , _Just
                                                 )
-import qualified XMonad.Layout.Spacing as Spacing
+import XMonad.Lens
 
 --- Message Types
 
@@ -58,12 +58,6 @@ data GapsState = Gaps | NoGaps
 toggleGaps :: GapsState -> GapsState
 toggleGaps Gaps = NoGaps
 toggleGaps NoGaps = Gaps
-
-lWSLayout :: Lens (Workspace id l1 a) (Workspace id l2 a) l1 l2
-lWSLayout = lens get set
-  where
-    get (Workspace _ l _) = l
-    set (Workspace ident _ a) l = Workspace ident l a
 
 data ToggleLayout l a = ToggleLayout {
     fsState :: FSState ,
