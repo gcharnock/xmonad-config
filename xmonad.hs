@@ -42,7 +42,8 @@ onStartup = do
 main :: IO ()
 main =
   xmonad $ docks $ ewmh $ def
-    { terminal = "termite" -- "urxvt"
+    -- { terminal = "termite"
+    { terminal = "urxvt"
     , normalBorderColor = "#000000"
     , focusedBorderColor = "#cd8b00"
     , borderWidth = 1
