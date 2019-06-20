@@ -72,7 +72,10 @@ keybindings =
 
    , ((mod3Mask, xK_f), sendMessage My.MsgToggleFS)
    , ((mod4Mask, xK_F11), sendMessage My.MsgToggleFS)
-   
+  
+   , ((mod3Mask, xK_t), sendMessage My.MsgPutWindowInTray)
+   , ((mod3Mask, xK_r), sendMessage My.MsgClearTray)
+
    , ((mod3Mask, xK_g), sendMessage My.MsgToggleGaps)
    , ((mod4Mask, xK_F12), sendMessage My.MsgToggleGaps)
 
@@ -137,7 +140,7 @@ myWorkspaces = [ Node "Browser" []
                ]
 
 myLayout = My.addToggles $ avoidStruts 
-  (emptyBSP ||| simpleTabbed {-||| My.tabbedWithTray-} ||| tiled ||| Mirror tiled)
+  (emptyBSP ||| simpleTabbed ||| My.tabbedWithTray ||| tiled ||| Mirror tiled)
   where
     -- default tiling algorithm partitions the screen into two panes
     tiled   = Tall nmaster delta ratio
