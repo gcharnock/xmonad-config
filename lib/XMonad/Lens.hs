@@ -5,13 +5,7 @@ import           XMonad
 import           XMonad.StackSet                ( Workspace(Workspace), Stack(..) )
 import           Control.Lens                   ( Lens
                                                 , Lens'
-                                                , (^.)
-                                                , (%~)
-                                                , (.~)
                                                 , lens
-                                                , (&)
-                                                , _2
-                                                , _Just
                                                 )
 
 lWSLayout :: Lens (Workspace id l1 a) (Workspace id l2 a) l1 l2

@@ -75,6 +75,7 @@ keybindings =
   
    , ((mod3Mask, xK_t), sendMessage My.MsgPutWindowInTray)
    , ((mod3Mask, xK_r), sendMessage My.MsgClearTray)
+   , ((mod3Mask, xK_d), sendMessage My.MsgToggleFocus)
 
    , ((mod3Mask, xK_g), sendMessage My.MsgToggleGaps)
    , ((mod4Mask, xK_F12), sendMessage My.MsgToggleGaps)

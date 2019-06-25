@@ -21,15 +21,14 @@ import           XMonad                         ( Message
                                                 )
 import           XMonad.StackSet                ( Workspace(Workspace), StackSet(..), stack, Stack(..), Screen(..) )
 import           XMonad.Core           (XState(..))
-import           Control.Lens                   ( Lens
+import           Control.Lens                   ( (^.) 
                                                 , Lens'
-                                                , (^.)
                                                 , (?~)
                                                 , (.~)
                                                 , lens
                                                 , (&)
                                                 )
-
+import qualified XMonad.Operations as X
 import XMonad.Layout.Decoration
 import XMonad.Layout.Tabbed
 import XMonad.Layout.Simplest
@@ -49,6 +48,9 @@ instance Message MsgPutWindowInTray
 data MsgClearTray = MsgClearTray
 instance Message MsgClearTray
 
+data MsgToggleFocus = MsgToggleFocus
+instance Message MsgToggleFocus
+
 type TabbedT a = ModifiedLayout (Decoration TabbedDecoration DefaultShrinker) Simplest a
 
 data TabbedTrayState a = TabbedTrayState [a] [a]
@@ -57,6 +59,7 @@ data TabbedTrayState a = TabbedTrayState [a] [a]
 
 data TabbedTrayLayout a = TabbedTrayLayout
    { tabbedTrayWindows :: Maybe a 
+   , tabbedSubStack :: Maybe (Stack a)
    , tabbedLayout :: TabbedT a
    }
   deriving (Show, Read)
@@ -64,11 +67,15 @@ data TabbedTrayLayout a = TabbedTrayLayout
 tabbedWithTray :: TabbedTrayLayout Window
 tabbedWithTray = TabbedTrayLayout 
    { tabbedTrayWindows = Nothing
+   , tabbedSubStack = Nothing
    , tabbedLayout = simpleTabbed
    }
 
 lTabbedTrayWindows :: Lens' (TabbedTrayLayout a) (Maybe a)
 lTabbedTrayWindows = lens tabbedTrayWindows (\t n -> t { tabbedTrayWindows = n })
+
+lTabbedSubStack :: Lens' (TabbedTrayLayout a) (Maybe (Stack a))
+lTabbedSubStack = lens tabbedSubStack (\t n -> t { tabbedSubStack = n })
 
 lTabbedLayout :: Lens' (TabbedTrayLayout a) (TabbedT a)
 lTabbedLayout = lens tabbedLayout (\t n -> t { tabbedLayout = n })
@@ -107,32 +114,68 @@ runLayoutTTL ws rect = do
 
                                trayRect = rect & lRectX .~ (rect ^. lRectX) + fromIntegral leftW
                                                & lRectWidth .~ rightW
-                               trayWindow = (window, trayRect)
-                            in (rect', stack', [trayWindow])
+                               trayTupple = (window, trayRect)
+                            in (rect', stack', [trayTupple])
+
+    let tabbedFocused =
+         case tabbedStack of
+            Nothing -> Nothing
+            Just Stack {focus} -> Just focus
 
     let innerWS = ws & lWSLayout .~ tabbedLayout
                      & lWSStack .~ tabbedStack
     (windowList, newState) <- runLayout innerWS tabbedRect
     return $ case newState of
-        Nothing -> (windowList ++ tray, Nothing)
-        Just newTabbedState ->
-             (windowList ++ tray, Just $ layout & lTabbedLayout .~ newTabbedState)
+        Nothing -> do
+            let newLayout = layout & lTabbedSubStack .~ tabbedStack
+            (windowList ++ tray, Just newLayout)
+        Just newTabbedState -> do
+            let newLayout = layout & lTabbedLayout .~ newTabbedState
+                                   & lTabbedSubStack .~ tabbedStack 
+            (windowList ++ tray, Just newLayout)
 
+toggleFocus :: TabbedTrayLayout Window -> X ()
+toggleFocus TabbedTrayLayout { tabbedTrayWindows, tabbedSubStack} =
+    case tabbedTrayWindows of
+        Nothing -> return ()
+        Just a -> do
+            stack <- getCurrentStack
+            case stack of
+                Nothing -> return ()
+                Just stack' -> do
+                    let Stack {focus = currentFocus} = stack'
+                    if currentFocus /= a
+                          then X.focus a
+                          else do
+                            case tabbedSubStack of
+                                Nothing -> return ()
+                                Just Stack {focus = tabbedFocus} ->
+                                    X.focus tabbedFocus
+
+
+
+getCurrentStack :: X (Maybe (Stack Window))
+getCurrentStack = do
+    XState {windowset = StackSet { current = Screen { workspace = Workspace { stack=stack }}}} <- get
+    return stack
 
 handleMessageTTL :: TabbedTrayLayout Window
     -> SomeMessage
     -> X (Maybe (TabbedTrayLayout Window))
-handleMessageTTL l msg | Just MsgDividerRight <- fromMessage msg =
+handleMessageTTL _ msg | Just MsgDividerRight <- fromMessage msg =
     return Nothing
 handleMessageTTL l msg | Just MsgPutWindowInTray <- fromMessage msg = do
-    XState {windowset = StackSet { current = Screen { workspace = Workspace { stack=stack }}}} <- get
+    stack <- getCurrentStack
     case stack of
         Nothing -> return Nothing
         Just stack' -> do
             let Stack {focus} = stack'
             return $ Just $ l & lTabbedTrayWindows ?~ focus
-handleMessageTTL l msg | Just MsgClearTray <- fromMessage msg = do
+handleMessageTTL l msg | Just MsgClearTray <- fromMessage msg = 
     return $ Just $ l & lTabbedTrayWindows .~ Nothing
+handleMessageTTL l msg | Just MsgToggleFocus <- fromMessage msg = do
+    toggleFocus l
+    return Nothing
 handleMessageTTL l msg = do
     maybeLayout <- handleMessage (l ^. lTabbedLayout) msg
     return $ fmap (\inner -> l & lTabbedLayout .~ inner) maybeLayout
