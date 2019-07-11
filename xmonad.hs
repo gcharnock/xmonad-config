@@ -65,10 +65,13 @@ keybindings =
    , ((mod4Mask .|. controlMask, xK_u), rotFocusedDown)
 
    , ((mod4Mask                , xK_g     ), gotoMenu)
-   , ((mod4Mask                , xK_b     ), bringMenu)
+   , ((mod4Mask                , xK_b     ), bringMenu)] ++
 
+    [((m .|. mod3Mask, key), screenWorkspace sc >>= flip whenJust (windows . f))
+        | (key, sc) <- zip [xK_w, xK_e, xK_r] [1, 0, 2]
+        , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]] ++
    
-   , ((mod4Mask,                 xK_semicolon), sendMessage Expand)
+   [ ((mod4Mask,                 xK_semicolon), sendMessage Expand)
 
    , ((mod3Mask, xK_f), sendMessage My.MsgToggleFS)
    , ((mod4Mask, xK_F11), sendMessage My.MsgToggleFS)
@@ -140,7 +143,7 @@ myWorkspaces = [ Node "Browser" []
                ]
 
 myLayout = My.addToggles $ avoidStruts 
-  (emptyBSP ||| simpleTabbed ||| My.tabbedWithTray ||| tiled ||| Mirror tiled)
+  ( My.tabbedWithTray ||| emptyBSP ||| tiled ||| Mirror tiled)
   where
     -- default tiling algorithm partitions the screen into two panes
     tiled   = Tall nmaster delta ratio
