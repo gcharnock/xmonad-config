@@ -68,7 +68,7 @@ keybindings =
    , ((mod4Mask                , xK_b     ), bringMenu)] ++
 
     [((m .|. mod3Mask, key), screenWorkspace sc >>= flip whenJust (windows . f))
-        | (key, sc) <- zip [xK_w, xK_e, xK_r] [1, 0, 2]
+        | (key, sc) <- zip [xK_w, xK_e, xK_r] [0, 1, 2]
         , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]] ++
    
    [ ((mod4Mask,                 xK_semicolon), sendMessage Expand)
@@ -116,12 +116,12 @@ keybindings =
 
 myWorkspaces :: Forest String
 myWorkspaces = [ Node "Browser" []
-               , Node "General"
-                   [ Node "1" []
-                   , Node "2" []
-                   , Node "3" []
-                   , Node "4" []
-                   ]
+               , Node "General 1" []
+	       , Node "General 2" []
+               , Node "Genreal 3" []
+               , Node "General 4" []
+               , Node "General 5" []
+                   
                , Node "ZL"
                    [ Node "lobby-server" []
                    , Node "lobby-client" []
